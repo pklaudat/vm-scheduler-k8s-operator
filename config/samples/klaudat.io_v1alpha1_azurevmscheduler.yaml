@@ -1,0 +1,9 @@
+apiVersion: klaudat.io.klaudat.io/v1alpha1
+kind: AzureVmScheduler
+metadata:
+  labels:
+    app.kubernetes.io/name: vm-scheduler-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: azurevmscheduler-sample
+spec:
+  # TODO(user): Add fields here

@@ -1,0 +1,27 @@
+# This rule is not used by the project vm-scheduler-operator itself.
+# It is provided to allow the cluster admin to help manage permissions for users.
+#
+# Grants full permissions ('*') over klaudat.io.klaudat.io.
+# This role is intended for users authorized to modify roles and bindings within the cluster,
+# enabling them to delegate specific permissions to other users or groups as needed.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: vm-scheduler-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: azurevmscheduler-admin-role
+rules:
+- apiGroups:
+  - klaudat.io.klaudat.io
+  resources:
+  - azurevmschedulers
+  verbs:
+  - '*'
+- apiGroups:
+  - klaudat.io.klaudat.io
+  resources:
+  - azurevmschedulers/status
+  verbs:
+  - get
