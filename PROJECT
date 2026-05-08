@@ -16,7 +16,7 @@ resources:
     namespaced: true
   controller: true
   domain: klaudat.io
-  group: klaudat.io
+  group: infra
   kind: AzureVmScheduler
   path: github.com/pklaudat/azure-vm-scheduler-operator/api/v1alpha1
   version: v1alpha1

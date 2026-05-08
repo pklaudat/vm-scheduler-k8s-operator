@@ -28,14 +28,22 @@ type AzureVmSchedulerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of AzureVmScheduler. Edit azurevmscheduler_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
-	SubscriptionId string `json:"subsriptionid"`
+	// +kubebuilder:validation:MinLength=1
+	SubscriptionID string `json:"subscriptionId"`
+
+	// +kubebuilder:validation:MinLength=1
 	ResourceGroup string `json:"resourceGroup"`
-	VmNames string[] `json:"vmNames"`
-	startUpAt string `json:"startUpAt"`
-	shutdownAt string `json:"shutdownAt"`
-	timezone string `json:"timezone,omitempty"`
+
+	// +kubebuilder:validation:MinItems=1
+	VMNames []string `json:"vmNames"`
+
+	// +kubebuilder:validation:Pattern=`^([01][0-9]|2[0-3]):([0-5][0-9])$`
+	StartUpAt string `json:"startUpAt"`
+
+	// +kubebuilder:validation:Pattern=`^([01][0-9]|2[0-3]):([0-5][0-9])$`
+	ShutdownAt string `json:"shutdownAt"`
+
+	Timezone string `json:"timezone,omitempty"`
 }
 
 // AzureVmSchedulerStatus defines the observed state of AzureVmScheduler.
