@@ -4,20 +4,20 @@ import (
 	
 	"fmt"
 	"time"
-	
+
 	klaudatiov1alpha1 "github.com/pklaudat/azure-vm-scheduler-operator/api/v1alpha1"
 )
 
 
 func validateSchedulerSpec(scheduler *klaudatiov1alpha1.AzureVmScheduler) error {
 
-	spec := scheduler.spec
+	spec := scheduler.Spec
 
 	if len(spec.Names) == 0 && len(spec.Tags) == 0 {
 		return fmt.Errorf("selector must contain at least one tag or vm name")
 	}
 
-	if spec.Schedule.Start == "" or spec.Schedule.stop == "" {
+	if spec.Schedule.Start == "" || spec.Schedule.stop == "" {
 		return fmt.Errorf("schedule start time or stop time must not be empty")
 	}
 
