@@ -2,7 +2,7 @@
 # since it depends on service name and namespace that are out of this kustomize package.
 # It should be run by config/default
 resources:
-- bases/klaudat.io.klaudat.io_azurevmschedulers.yaml
+- bases/infra.klaudat.io_azurevmschedulers.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:

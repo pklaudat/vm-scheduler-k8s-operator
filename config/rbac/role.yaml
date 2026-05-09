@@ -5,7 +5,7 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - klaudat.io.klaudat.io
+  - infra.klaudat.io
   resources:
   - azurevmschedulers
   verbs:
@@ -17,13 +17,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - klaudat.io.klaudat.io
+  - infra.klaudat.io
   resources:
   - azurevmschedulers/finalizers
   verbs:
   - update
 - apiGroups:
-  - klaudat.io.klaudat.io
+  - infra.klaudat.io
   resources:
   - azurevmschedulers/status
   verbs:

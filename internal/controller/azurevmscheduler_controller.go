@@ -33,9 +33,9 @@ type AzureVmSchedulerReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=klaudat.io.klaudat.io,resources=azurevmschedulers,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=klaudat.io.klaudat.io,resources=azurevmschedulers/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=klaudat.io.klaudat.io,resources=azurevmschedulers/finalizers,verbs=update
+// +kubebuilder:rbac:groups=infra.klaudat.io,resources=azurevmschedulers,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=infra.klaudat.io,resources=azurevmschedulers/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=infra.klaudat.io,resources=azurevmschedulers/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -49,7 +49,21 @@ type AzureVmSchedulerReconciler struct {
 func (r *AzureVmSchedulerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = logf.FromContext(ctx)
 
-	// TODO(user): your logic here
+	var scheduler klaudatiov1alpha1.AzureVmScheduler
+
+	err := r.Get(ctx, req.NamespacedName, &scheduler)
+
+	if err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+
+
+	err = r.Status().Update(ctx, &scheduler)
+	
+	if err != nil {
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }

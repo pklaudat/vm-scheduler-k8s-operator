@@ -20,13 +20,47 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+const (
+	PhasePending      = "Pending"
+	PhaseReconciling  = "Reconciling"
+	PhaseReady        = "Ready"
+	PhaseError        = "Error"
+
+	PowerStateRunning = "Running"
+	PowerStateStopped = "Stopped"
+)
+
+
+type Schedule struct {
+	// +kubebuilder:validation:Pattern=`^([01][0-9]|2[0-3]):([0-5][0-9])$`
+	Start string `json:"start,omitempty"`
+
+	// +kubebuilder:validation:Pattern=`^([01][0-9]|2[0-3]):([0-5][0-9])$`
+	Stop string `json:"stop,omitempty"`
+}
+
+type VMSelector struct {
+	Names []string `json:"names,omitempty"`
+
+	// Dynamic VM selection using Azure tags
+	//
+	// Example:
+	// tags:
+	//   autoSchedule: "true"
+	//   environment: "dev"
+	//
+	// +optional
+	Tags map[string]string `json:"tags,omitempty"`
+}
+
 
 // AzureVmSchedulerSpec defines the desired state of AzureVmScheduler.
 type AzureVmSchedulerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	// +kubebuilder:default=true
+	Enabled bool `json:"enabled,omitempty"`
 
 	// +kubebuilder:validation:MinLength=1
 	SubscriptionID string `json:"subscriptionId"`
@@ -34,26 +68,78 @@ type AzureVmSchedulerSpec struct {
 	// +kubebuilder:validation:MinLength=1
 	ResourceGroup string `json:"resourceGroup"`
 
-	// +kubebuilder:validation:MinItems=1
-	VMNames []string `json:"vmNames"`
+    Selector VMSelector `json:"selector"`
 
-	// +kubebuilder:validation:Pattern=`^([01][0-9]|2[0-3]):([0-5][0-9])$`
-	StartUpAt string `json:"startUpAt"`
-
-	// +kubebuilder:validation:Pattern=`^([01][0-9]|2[0-3]):([0-5][0-9])$`
-	ShutdownAt string `json:"shutdownAt"`
+    Schedule Schedule `json:"schedule"`
 
 	Timezone string `json:"timezone,omitempty"`
+}
+
+
+type VMStatus struct {
+
+	Name string `json:"name,omitempty"`
+
+	DesiredPowerState string `json:"desiredPowerState,omitempty"`
+
+	ActualPowerState string `json:"actualPowerState,omitempty"`
+
+	// Last operation executed against the VM
+	// Example:
+	// - StartRequested
+	// - StopRequested
+	// - WaitingForCompletion
+	// - Completed
+	// - Failed
+	LastOperation string `json:"lastOperation,omitempty"`
+
+	// Last status update timestamp
+	LastUpdated metav1.Time `json:"lastUpdated,omitempty"`
 }
 
 // AzureVmSchedulerStatus defines the observed state of AzureVmScheduler.
 type AzureVmSchedulerStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
+
+	// Current reconciliation phase
+	//
+	// Examples:
+	// - Pending
+	// - Reconciling
+	// - Ready
+	// - Error
+	Phase string `json:"phase,omitempty"`
+
+	// Current observed generation
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// Last reconciliation execution
+	LastScheduleExecution metav1.Time `json:"lastScheduleExecution,omitempty"`
+
+	// Last successful reconciliation execution
+	LastSuccessfulExecution metav1.Time `json:"lastSuccessfulExecution,omitempty"`
+
+	// High-level last operation
+	LastOperation string `json:"lastOperation,omitempty"`
+
+	// Per-VM reconciliation status
+	VMStatuses []VMStatus `json:"vmStatuses,omitempty"`
+
+	// Standard Kubernetes conditions
+	//
+	// +listType=map
+	// +listMapKey=type
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+
+// +kubebuilder:printcolumn:name="Enabled",type="boolean",JSONPath=".spec.enabled"
+// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase"
+// +kubebuilder:printcolumn:name="LastRun",type="date",JSONPath=".status.lastScheduleExecution"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // AzureVmScheduler is the Schema for the azurevmschedulers API.
 type AzureVmScheduler struct {

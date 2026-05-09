@@ -1,4 +1,4 @@
-apiVersion: klaudat.io.klaudat.io/v1alpha1
+apiVersion: infra.klaudat.io/v1alpha1
 kind: AzureVmScheduler
 metadata:
   labels:
