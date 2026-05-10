@@ -21,15 +21,14 @@ import (
 )
 
 const (
-	PhasePending      = "Pending"
-	PhaseReconciling  = "Reconciling"
-	PhaseReady        = "Ready"
-	PhaseError        = "Error"
+	PhasePending     = "Pending"
+	PhaseReconciling = "Reconciling"
+	PhaseReady       = "Ready"
+	PhaseError       = "Error"
 
 	PowerStateRunning = "Running"
 	PowerStateStopped = "Stopped"
 )
-
 
 type Schedule struct {
 	// +kubebuilder:validation:Pattern=`^([01][0-9]|2[0-3]):([0-5][0-9])$`
@@ -53,7 +52,6 @@ type VMSelector struct {
 	Tags map[string]string `json:"tags,omitempty"`
 }
 
-
 // AzureVmSchedulerSpec defines the desired state of AzureVmScheduler.
 type AzureVmSchedulerSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
@@ -68,16 +66,14 @@ type AzureVmSchedulerSpec struct {
 	// +kubebuilder:validation:MinLength=1
 	ResourceGroup string `json:"resourceGroup"`
 
-    Selector VMSelector `json:"selector"`
+	Selector VMSelector `json:"selector"`
 
-    Schedule Schedule `json:"schedule"`
+	Schedule Schedule `json:"schedule"`
 
 	Timezone string `json:"timezone,omitempty"`
 }
 
-
 type VMStatus struct {
-
 	Name string `json:"name,omitempty"`
 
 	DesiredPowerState string `json:"desiredPowerState,omitempty"`

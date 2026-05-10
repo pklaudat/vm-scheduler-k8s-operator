@@ -57,10 +57,8 @@ func (r *AzureVmSchedulerReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-
-
 	err = r.Status().Update(ctx, &scheduler)
-	
+
 	if err != nil {
 		return ctrl.Result{}, err
 	}
