@@ -144,8 +144,6 @@ type AzureVmScheduler struct {
 }
 
 // +kubebuilder:object:root=true
-
-// AzureVmSchedulerList contains a list of AzureVmScheduler.
 type AzureVmSchedulerList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

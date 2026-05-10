@@ -18,7 +18,9 @@ package controller
 
 import (
 	"context"
+	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -57,13 +59,41 @@ func (r *AzureVmSchedulerReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	if !scheduler.Spec.Enabled {
+		return ctrl.Result{
+			RequeueAfter: time.Minute,
+		}, nil
+	}
+
+	scheduler.Status.Phase = klaudatiov1alpha1.PhaseReconciling
+	scheduler.Status.LastScheduleExecution = metav1.Now()
+
+	err = r.reconcileVmScheduler(ctx, &scheduler)
+
+	if err != nil {
+		scheduler.Status.Phase = klaudatiov1alpha1.PhaseError
+
+		_ = r.Status().Update(ctx, &scheduler)
+
+		return ctrl.Result{
+				RequeueAfter: time.Minute,
+			},
+			err
+	}
+
+	scheduler.Status.Phase = klaudatiov1alpha1.PhaseReady
+	scheduler.Status.LastSuccessfulExecution = metav1.Now()
+	scheduler.Status.ObservedGeneration = scheduler.Generation
+
 	err = r.Status().Update(ctx, &scheduler)
 
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
-	return ctrl.Result{}, nil
+	return ctrl.Result{
+		RequeueAfter: time.Minute,
+	}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -72,4 +102,12 @@ func (r *AzureVmSchedulerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&klaudatiov1alpha1.AzureVmScheduler{}).
 		Named("azurevmscheduler").
 		Complete(r)
+}
+
+func (r *AzureVmSchedulerReconciler) reconcileVmScheduler(
+	ctx context.Context,
+	scheduler *klaudatiov1alpha1.AzureVmScheduler,
+) error {
+
+	//
 }
