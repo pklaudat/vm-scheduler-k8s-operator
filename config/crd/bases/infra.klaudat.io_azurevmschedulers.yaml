@@ -14,7 +14,20 @@ spec:
     singular: azurevmscheduler
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.enabled
+      name: Enabled
+      type: boolean
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    - jsonPath: .status.lastScheduleExecution
+      name: LastRun
+      type: date
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: AzureVmScheduler is the Schema for the azurevmschedulers API.
@@ -39,36 +52,55 @@ spec:
           spec:
             description: AzureVmSchedulerSpec defines the desired state of AzureVmScheduler.
             properties:
+              enabled:
+                default: true
+                type: boolean
               resourceGroup:
                 minLength: 1
                 type: string
-              shutdownAt:
-                pattern: ^([01][0-9]|2[0-3]):([0-5][0-9])$
-                type: string
-              startUpAt:
-                pattern: ^([01][0-9]|2[0-3]):([0-5][0-9])$
-                type: string
+              schedule:
+                properties:
+                  start:
+                    pattern: ^([01][0-9]|2[0-3]):([0-5][0-9])$
+                    type: string
+                  stop:
+                    pattern: ^([01][0-9]|2[0-3]):([0-5][0-9])$
+                    type: string
+                type: object
+              selector:
+                properties:
+                  names:
+                    items:
+                      type: string
+                    type: array
+                  tags:
+                    additionalProperties:
+                      type: string
+                    description: |-
+                      Dynamic VM selection using Azure tags
+
+                      Example:
+                      tags:
+                        autoSchedule: "true"
+                        environment: "dev"
+                    type: object
+                type: object
               subscriptionId:
                 minLength: 1
                 type: string
               timezone:
                 type: string
-              vmNames:
-                items:
-                  type: string
-                minItems: 1
-                type: array
             required:
             - resourceGroup
-            - shutdownAt
-            - startUpAt
+            - schedule
+            - selector
             - subscriptionId
-            - vmNames
             type: object
           status:
             description: AzureVmSchedulerStatus defines the observed state of AzureVmScheduler.
             properties:
               conditions:
+                description: Standard Kubernetes conditions
                 items:
                   description: Condition contains details for one aspect of the current
                     state of this API Resource.
@@ -128,22 +160,53 @@ spec:
                 - type
                 x-kubernetes-list-type: map
               lastOperation:
+                description: High-level last operation
                 type: string
               lastScheduleExecution:
+                description: Last reconciliation execution
+                format: date-time
+                type: string
+              lastSuccessfulExecution:
+                description: Last successful reconciliation execution
                 format: date-time
                 type: string
               observedGeneration:
+                description: Current observed generation
                 format: int64
                 type: integer
+              phase:
+                description: |-
+                  Current reconciliation phase
+
+                  Examples:
+                  - Pending
+                  - Reconciling
+                  - Ready
+                  - Error
+                type: string
               vmStatuses:
+                description: Per-VM reconciliation status
                 items:
                   properties:
+                    actualPowerState:
+                      type: string
+                    desiredPowerState:
+                      type: string
+                    lastOperation:
+                      description: |-
+                        Last operation executed against the VM
+                        Example:
+                        - StartRequested
+                        - StopRequested
+                        - WaitingForCompletion
+                        - Completed
+                        - Failed
+                      type: string
                     lastUpdated:
+                      description: Last status update timestamp
                       format: date-time
                       type: string
                     name:
-                      type: string
-                    powerState:
                       type: string
                   type: object
                 type: array
@@ -151,5 +214,4 @@ spec:
         type: object
     served: true
     storage: true
-    subresources:
-      status: {}
+    subresources: {}
