@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 )
 
 func (c *Client) GetPowerState(
@@ -155,15 +156,66 @@ func (c *Client) StopVM(
 func (c *Client) ListVMsByTags(
 	ctx context.Context,
 	subscriptionID string,
-	resourceGroup string,
+	resourceGroups []string,
 	tags map[string]string,
-) ([]string, error) {
+) ([]ScheduleVM, error) {
+
+	// If no RGs were provided, enumerate all RGs in subscription
+	if len(resourceGroups) == 0 {
+
+		rgClient, err := armresources.NewResourceGroupsClient(
+			subscriptionID,
+			c.credential,
+			nil,
+		)
+
+		if err != nil {
+			return nil, fmt.Errorf(
+				"failed to create resource groups client: %w",
+				err,
+			)
+		}
+
+		rgPager := rgClient.NewListPager(nil)
+
+		for rgPager.More() {
+
+			page, err := rgPager.NextPage(ctx)
+
+			if err != nil {
+				return nil, fmt.Errorf(
+					"failed to list resource groups in subscription %s: %w",
+					subscriptionID,
+					err,
+				)
+			}
+
+			for _, rg := range page.Value {
+
+				if rg.Name == nil {
+					continue
+				}
+
+				fmt.Printf(
+					"Found resource group %s in subscription %s\n",
+					*rg.Name,
+					subscriptionID,
+				)
+
+				resourceGroups = append(
+					resourceGroups,
+					*rg.Name,
+				)
+			}
+		}
+	}
 
 	vmClient, err := armcompute.NewVirtualMachinesClient(
 		subscriptionID,
 		c.credential,
 		nil,
 	)
+
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to create vm client: %w",
@@ -171,60 +223,71 @@ func (c *Client) ListVMsByTags(
 		)
 	}
 
-	pager := vmClient.NewListPager(
-		resourceGroup,
-		nil,
-	)
+	var matchedVMs []ScheduleVM
 
-	var matchedVMs []string
+	for _, resourceGroup := range resourceGroups {
 
-	for pager.More() {
+		pager := vmClient.NewListPager(
+			resourceGroup,
+			nil,
+		)
 
-		page, err := pager.NextPage(ctx)
-		if err != nil {
-			return nil, fmt.Errorf(
-				"failed to list vms: %w",
-				err,
-			)
-		}
+		for pager.More() {
 
-		for _, vm := range page.Value {
+			page, err := pager.NextPage(ctx)
 
-			if vm.Name == nil {
-				continue
-			}
-
-			if vm.Tags == nil {
-				continue
-			}
-
-			match := true
-
-			for expectedKey, expectedValue := range tags {
-
-				actualValue, exists := vm.Tags[expectedKey]
-
-				if !exists {
-					match = false
-					break
-				}
-
-				if actualValue == nil {
-					match = false
-					break
-				}
-
-				if *actualValue != expectedValue {
-					match = false
-					break
-				}
-			}
-
-			if match {
-				matchedVMs = append(
-					matchedVMs,
-					*vm.Name,
+			if err != nil {
+				return nil, fmt.Errorf(
+					"failed to list VMs in resource group %s: %w",
+					resourceGroup,
+					err,
 				)
+			}
+
+			for _, vm := range page.Value {
+
+				if vm.Name == nil {
+					continue
+				}
+
+				if vm.Tags == nil {
+					continue
+				}
+
+				match := true
+
+				for expectedKey, expectedValue := range tags {
+
+					actualValue, exists := vm.Tags[expectedKey]
+
+					if !exists || actualValue == nil {
+						match = false
+						break
+					}
+
+					if *actualValue != expectedValue {
+						match = false
+						break
+					}
+				}
+
+				if match {
+
+					fmt.Printf(
+						"Matched VM %s in resource group %s\n",
+						*vm.Name,
+						resourceGroup,
+					)
+
+					matchedVMs = append(
+						matchedVMs,
+						ScheduleVM{
+							Name:          *vm.Name,
+							ResourceGroup: resourceGroup,
+							Subscription:  subscriptionID,
+						},
+					)
+				}
 			}
 		}
 	}

@@ -5,3 +5,9 @@ const (
 	PowerStateStopped = "Stopped"
 	PowerStateUnknown = "Unknown"
 )
+
+type ScheduleVM struct {
+	Name          string
+	ResourceGroup string
+	Subscription  string
+}

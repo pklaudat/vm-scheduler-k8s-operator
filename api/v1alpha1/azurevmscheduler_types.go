@@ -64,7 +64,7 @@ type AzureVmSchedulerSpec struct {
 	SubscriptionID string `json:"subscriptionId"`
 
 	// +kubebuilder:validation:MinLength=1
-	ResourceGroup string `json:"resourceGroup"`
+	ResourceGroups []string `json:"resourceGroups"`
 
 	Selector VMSelector `json:"selector"`
 
@@ -74,6 +74,10 @@ type AzureVmSchedulerSpec struct {
 }
 
 type VMStatus struct {
+	SubscriptionID string `json:"subscriptionId,omitempty"`
+
+	ResourceGroup string `json:"resourceGroup,omitempty"`
+
 	Name string `json:"name,omitempty"`
 
 	DesiredPowerState string `json:"desiredPowerState,omitempty"`

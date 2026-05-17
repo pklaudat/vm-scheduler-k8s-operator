@@ -60,9 +60,7 @@ func (r *AzureVmSchedulerReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	if !scheduler.Spec.Enabled {
-		return ctrl.Result{
-			RequeueAfter: time.Minute,
-		}, nil
+		return ctrl.Result{}, nil
 	}
 
 	scheduler.Status.Phase = klaudatiov1alpha1.PhaseReconciling
@@ -102,12 +100,4 @@ func (r *AzureVmSchedulerReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&klaudatiov1alpha1.AzureVmScheduler{}).
 		Named("azurevmscheduler").
 		Complete(r)
-}
-
-func (r *AzureVmSchedulerReconciler) reconcileVmScheduler(
-	ctx context.Context,
-	scheduler *klaudatiov1alpha1.AzureVmScheduler,
-) error {
-
-	//
 }
