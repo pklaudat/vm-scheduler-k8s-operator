@@ -16,7 +16,7 @@ func (r *AzureVmSchedulerReconciler) reconcileVmScheduler(
 	azureClient, err := azure.NewClient()
 
 	if err != nil {
-		fmt.Errorf("Failed to authenticate against azure - invalid controller app credentials")
+		return fmt.Errorf("failed to authenticate against azure - invalid controller app credentials: %w", err)
 	}
 
 	vms, err := azureClient.ListVMsByTags(
@@ -27,7 +27,7 @@ func (r *AzureVmSchedulerReconciler) reconcileVmScheduler(
 	)
 
 	if err != nil {
-		fmt.Errorf("Failed to list VMs by Tags")
+		return fmt.Errorf("failed to list VMs by tags: %w", err)
 	}
 
 	for _, vm := range vms {
@@ -35,7 +35,7 @@ func (r *AzureVmSchedulerReconciler) reconcileVmScheduler(
 		powerState, err := azureClient.GetPowerState(ctx, vm.Subscription, vm.ResourceGroup, vm.Name)
 
 		if err != nil {
-			fmt.Errorf("Failed to get current power state for vm %s", vm.Name)
+			fmt.Printf("Failed to get current power state for vm %s - %w", vm.Name, err)
 
 			continue
 		}
